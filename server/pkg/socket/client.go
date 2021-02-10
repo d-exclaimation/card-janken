@@ -10,6 +10,7 @@ package socket
 
 import (
 	"fmt"
+	"github.com/d-exclaimation/battle-cards-multi/pkg/models"
 	"github.com/gorilla/websocket"
 	"log"
 )
@@ -20,10 +21,6 @@ type Client struct {
 	Pool *Pool
 }
 
-type Message struct {
-	Type int  `json:"type"`
-	Body string `json:"body"`
-}
 
 func (client *Client) Read() {
 	defer func() {
@@ -32,19 +29,22 @@ func (client *Client) Read() {
 	}()
 
 	for {
-		messageType, data, err := client.Conn.ReadMessage()
+		var (
+			card models.JankenCard
+			err = client.Conn.ReadJSON(&card)
+		)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 
-		var msg = Message{
-			Type: messageType,
-			Body: string(data),
+		var changes = &models.JankenChanges{
+			ID:   client.ID,
+			Card: &card,
 		}
 
-		client.Pool.Broadcast <- msg
+		client.Pool.Broadcast <- changes
 
-		fmt.Printf("Received: %v+\n", msg)
+		fmt.Printf("Received: %s\n", card.ToString())
 	}
 }

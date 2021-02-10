@@ -20,17 +20,18 @@ import {
 interface Props {
     isShown: boolean,
     isWon: boolean,
-    afterEffect: () => void,
+    onClose: () => void,
+    onConfirm: () => void,
 }
 
 
-const WinAlert: React.FC<Props> = ({isWon, isShown, afterEffect}: Props) => {
+const WinAlert: React.FC<Props> = ({isWon, isShown, onClose, onConfirm}: Props) => {
     const cancelRef = React.useRef(null);
 
     return (
         <AlertDialog
             isOpen={isShown}
-            onClose={() => afterEffect()}
+            onClose={() => onClose()}
             leastDestructiveRef={cancelRef}
         >
             <AlertDialogOverlay>
@@ -44,10 +45,13 @@ const WinAlert: React.FC<Props> = ({isWon, isShown, afterEffect}: Props) => {
                     </AlertDialogBody>
 
                     <AlertDialogFooter>
-                        <Button onClick={afterEffect} ref={cancelRef}>
+                        <Button onClick={onClose} ref={cancelRef}>
                             Cancel
                         </Button>
-                        <Button colorScheme="red" onClick={() => afterEffect()} ml={3}>
+                        <Button colorScheme="red" onClick={() => {
+                            onConfirm();
+                            onClose();
+                        }} ml={3}>
                             Restart
                         </Button>
                     </AlertDialogFooter>

@@ -9,8 +9,7 @@
 import { JankenCard, JankenRPS } from './JankenCard';
 
 export class JankenEngine {
-    myHand: JankenCard[];
-    otherHand: JankenCard[];
+    myHand: JankenCard[] = [];
 
     table: [JankenCard, JankenCard];
 
@@ -24,12 +23,9 @@ export class JankenEngine {
 
     constructor(colors: string[], elements: string[]) {
         // Append 5 random card using factory
-        this.myHand = [];
-        this.otherHand = [];
 
         for (let i = 0; i < 5; i++) {
             this.myHand.push(cardFactory(colors, elements));
-            this.otherHand.push(cardFactory(colors, elements));
         }
 
         // Add placeholder table card
@@ -38,37 +34,31 @@ export class JankenEngine {
             cardFactory(colors, elements)
         ];
 
+        this.table[0].isFaceUp = false;
+        this.table[1].isFaceUp = false;
+
         // Save color and element choices basically themes
         this.storage = [colors, elements];
     }
 
-    choose(index: number): void {
-        console.log('Test');
+    choose(index: number): JankenCard | null {
         // Guard if index is faulty or game is no longer on going
-        if (this.myHand.length <= 0 ||  index < 0 || index >= this.myHand.length || this.gameEnded != GameState.onGoing) return;
+        if (this.myHand.length <= 0 ||  index < 0 || index >= this.myHand.length || this.gameEnded != GameState.onGoing) return null;
 
         // Pull a card from the hand using the index
         const chosen = this.myHand[index];
         this.myHand.splice(index, 1);
 
 
-        // Set table, which will automatically call checker methods
-        this.setTable(chosen, Math.floor(Math.random() * this.otherHand.length));
-
         // Push a new card to each player hand
         this.myHand.push(cardFactory(...this.storage));
-        this.otherHand.push(cardFactory(...this.storage));
+        return chosen;
     }
 
-    setTable(card: JankenCard, enemyChoice: number): void {
-        // Grad the enemy card
-        const enemy = this.otherHand[enemyChoice];
-        this.otherHand.splice(enemyChoice, 1);
-
-
+    setTable(card: JankenCard, enemyChoice: JankenCard = cardFactory(...this.storage)): void {
         // Append to table
         this.table[0] = card;
-        this.table[1] = enemy;
+        this.table[1] = enemyChoice;
 
         this.checkRound();
     }

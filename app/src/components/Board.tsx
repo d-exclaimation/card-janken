@@ -14,6 +14,8 @@ import {
     Center,
 } from '@chakra-ui/react';
 import { useWindowSize } from '../libs/WindowConfig';
+import { useAudio } from '../libs/AudioPlayer';
+import { drivePlayURL } from '../libs/DriveSoundURL';
 import Card from './Card';
 import TableCard from './TableCard';
 import {JankenCard} from '../models/JankenCard';
@@ -21,13 +23,13 @@ import {JankenCard} from '../models/JankenCard';
 
 interface Props {
     myHand: JankenCard[],
-    otherHand: JankenCard[],
     table: [JankenCard, JankenCard],
     wonRound: boolean,
     choose: (index: number) => void,
 }
 
-const Board: React.FC<Props> = ({ myHand, otherHand, table, wonRound, choose }: Props ) => {
+const Board: React.FC<Props> = ({ myHand, table, wonRound, choose }: Props ) => {
+    const toggleFlip = useAudio(cardFlipURL);
     const size = useWindowSize();
 
     return (
@@ -35,10 +37,10 @@ const Board: React.FC<Props> = ({ myHand, otherHand, table, wonRound, choose }: 
             <VStack width={size.width * 0.6} height={size.height * 0.8}>
                 <HStack>
                     <Center>
-                        { otherHand.map((card, index) => {
+                        { myHand.map((card, index) => {
                             return (
                                 <Box key={index} m={5}>
-                                    <Card isFaceUp={card.isFaceUp} power={card.power} color={card.color} element={card.element} />
+                                    <Card isFaceUp={false} power={card.power} color={card.color} element={card.element} />
                                 </Box>
                             );
                         }) }
@@ -51,7 +53,10 @@ const Board: React.FC<Props> = ({ myHand, otherHand, table, wonRound, choose }: 
                     <Center>
                         { myHand.map((card, index) => {
                             return (
-                                <Box as="button" key={index} m={5} onClick={() => choose(index)}>
+                                <Box as="button" key={index} m={5} onClick={() => {
+                                    toggleFlip();
+                                    choose(index);
+                                }}>
                                     <Card isFaceUp={card.isFaceUp} power={card.power} color={card.color} element={card.element} />
                                 </Box>
                             );
@@ -62,5 +67,7 @@ const Board: React.FC<Props> = ({ myHand, otherHand, table, wonRound, choose }: 
         </Box>
     );
 };
+
+const cardFlipURL = drivePlayURL('https://drive.google.com/file/d/1tOqQ3RR5txhzrseHatUtJ8xNsdl1Ud0f/view');
 
 export default Board;
