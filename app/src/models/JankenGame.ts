@@ -65,11 +65,15 @@ export class JankenEngine {
 
     private checkRound(): void {
         // Compare and update round state
-        this.wonRound = this.table[0].compare(this.table[1]);
-        if (this.wonRound) {
-            this.myBank.push(this.table[0]);
-        } else {
-            this._otherBank.push(this.table[1]);
+        const res = this.table[0].compare(this.table[1]);
+        this.wonRound = res === null ? false : res;
+
+        if(res !== null) {
+            if (this.wonRound) {
+                this.myBank.push(this.table[0]);
+            } else {
+                this._otherBank.push(this.table[1]);
+            }
         }
 
         this.checkWon();

@@ -13,15 +13,15 @@ export class JankenCard {
     readonly rps: JankenRPS;
     isFaceUp: boolean;
 
-    constructor(element: string, power: number, color: string, rps: JankenRPS) {
+    constructor(element: string, power: number, color: string, rps: JankenRPS, isFaceUp = true) {
         this.element = element;
         this.power = power;
         this.color = color;
         this.rps = rps;
-        this.isFaceUp = true;
+        this.isFaceUp = isFaceUp;
     }
 
-    compare(other: JankenCard): boolean {
+    compare(other: JankenCard): boolean | null {
         if (this.wonAgainst(other)) {
             return true;
         }
@@ -29,7 +29,7 @@ export class JankenCard {
             return false;
         }
 
-        return this.power >= other.power;
+        return this.power === other.power ? null : this.power > other.power;
     }
 
     wonAgainst(other: JankenCard): boolean {

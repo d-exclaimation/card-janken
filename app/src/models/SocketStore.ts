@@ -17,6 +17,7 @@ export class SocketStore {
 
     constructor(store: JankenStore) {
         this.controller = store;
+        this.controller.tempTable.push(new JankenCard('', 0, '', 0, false));
         this.socket = new WebSocket('ws://localhost:8080/ws');
         console.log('Attempting Connection...');
 
@@ -24,22 +25,7 @@ export class SocketStore {
             console.log('Successfully Connected');
         };
 
-        this.socket.onmessage = (msg): void => {
-            // TODO: Proceed with the game
-            const data: JankenChanges = JSON.parse(msg.data);
-            const received = data.data;
-
-            if (data.type === NotificationData) {
-                // TODO: Start the game
-            }
-
-            if (data.type === CardData) {
-                const cardChanges = received as CardChanges;
-                const card = new JankenCard(cardChanges.element, cardChanges.power, cardChanges.color, cardChanges.rps);
-                console.log(card);
-                this.controller.proceed(card);
-            }
-        };
+        this.socket.onmessage = this.eventHandler;
 
         this.socket.onclose = (ev): void => {
             console.log('Socket Closed Connection: ', ev);
@@ -55,5 +41,26 @@ export class SocketStore {
 
     send(data: string): void {
         this.socket.send(data);
+    }
+
+    eventHandler(msg: MessageEvent): void {
+        // Wait for incoming messages, parse it as agreed JSON Interface
+        const data: JankenChanges = JSON.parse(msg.data);
+        const received = data.data;
+
+        // Check the data type given from the server
+        if (data.type === NotificationData) {
+
+            // Notification changes should start, or reset game state
+            const notif = received as NotificationChanges;
+            this.controller.tempTable = [];
+        }
+        else if (data.type === CardData) {
+
+            // Card changes should continue the game, by passing into the controller
+            const cardChanges = received as CardChanges;
+            const card = new JankenCard(cardChanges.element, cardChanges.power, cardChanges.color, cardChanges.rps);
+            this.controller.proceed(card);
+        }
     }
 }
