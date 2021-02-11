@@ -97,6 +97,7 @@ export class JankenStore {
     restart(): void {
         // Change the engine to a new one, and re-make into observable
         this.engine = new JankenEngine(colorPalette, elementPallete);
+        this.socket = this.multiplayer ? new SocketStore(this) : null;
         makeAutoObservable(this.engine);
     }
 }

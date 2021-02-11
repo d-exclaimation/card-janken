@@ -10,7 +10,6 @@ package main
 
 import (
 	"fmt"
-	randomkey "github.com/d-exclaimation/battle-cards-multi/pkg/key"
 	"github.com/d-exclaimation/battle-cards-multi/pkg/socket"
 	"log"
 	"net/http"
@@ -22,31 +21,41 @@ func main() {
 }
 
 func routes() {
-	var pool = socket.NewPool()
-	go pool.Start()
+	var rooms = make(map[*socket.Pool]bool)
 
 	http.HandleFunc("/ws", func(writer http.ResponseWriter, req *http.Request) {
-		serveSocket(pool, writer, req)
+		serveSocket(rooms, writer, req)
 	})
 }
 
-func serveSocket(pool *socket.Pool, writer http.ResponseWriter, req *http.Request) {
-	if len(pool.Clients) >= 2 {
-		writer.WriteHeader(http.StatusLocked);
-		return
-	}
+func serveSocket(rooms map[*socket.Pool]bool, writer http.ResponseWriter, req *http.Request) {
+	// Get a available room or create a new one
+	var pool = availableSlot(rooms)
 
+	// Upgrade connection from http to tcp
 	var conn, err = socket.Upgrade(writer, req)
 	if err != nil {
-		_, _ = fmt.Fprintf(writer, "%+V\n", err)
+		_, _ = fmt.Fprintf(writer, "%v\n", err)
 	}
 
-	var client = &socket.Client{
-		ID:   randomkey.RandomKey(40, false, true),
-		Conn: conn,
-		Pool: pool,
-	}
-
+	// Create a new client using conn and pool, register client to pool
+	var client = socket.NewClient(conn, pool)
 	pool.Register <- client
+
 	client.Read()
+}
+
+func availableSlot(rooms map[*socket.Pool]bool) *socket.Pool {
+	for pool, full := range rooms {
+		if !full {
+			return pool
+		}
+	}
+
+	// Create a new pool, save it and notify
+	var newPool = socket.NewPool(rooms)
+	go newPool.Start()
+	rooms[newPool] = false
+	log.Println("New Pool") // Test 1
+	return newPool
 }

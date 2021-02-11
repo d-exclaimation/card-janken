@@ -6,7 +6,7 @@
 //  Copyright © 2020 d-exclaimation. All rights reserved.
 //
 
-import {makeAutoObservable} from 'mobx';
+import {action, makeAutoObservable} from 'mobx';
 import {JankenStore} from './JankenStore';
 import {JankenChanges, NotificationChanges, CardChanges, NotificationData, CardData} from './JankenChanges';
 import {JankenCard} from './JankenCard';
@@ -25,7 +25,29 @@ export class SocketStore {
             console.log('Successfully Connected');
         };
 
-        this.socket.onmessage = this.eventHandler;
+        this.socket.onmessage = (msg) => {
+            // Wait for incoming messages, parse it as agreed JSON Interface
+            const data: JankenChanges = JSON.parse(msg.data);
+            const received = data.data;
+
+            // Check the data type given from the server
+            if (data.type === NotificationData) {
+
+                // Notification changes should start, or reset game state
+                const notif = received as NotificationChanges;
+                console.log(JSON.stringify(notif));
+                action(() => {
+                    this.controller.tempTable = [];
+                })();
+            }
+            else if (data.type === CardData) {
+
+                // Card changes should continue the game, by passing into the controller
+                const cardChanges = received as CardChanges;
+                const card = new JankenCard(cardChanges.element, cardChanges.power, cardChanges.color, cardChanges.rps);
+                this.controller.proceed(card);
+            }
+        };
 
         this.socket.onclose = (ev): void => {
             console.log('Socket Closed Connection: ', ev);
@@ -43,24 +65,4 @@ export class SocketStore {
         this.socket.send(data);
     }
 
-    eventHandler(msg: MessageEvent): void {
-        // Wait for incoming messages, parse it as agreed JSON Interface
-        const data: JankenChanges = JSON.parse(msg.data);
-        const received = data.data;
-
-        // Check the data type given from the server
-        if (data.type === NotificationData) {
-
-            // Notification changes should start, or reset game state
-            const notif = received as NotificationChanges;
-            this.controller.tempTable = [];
-        }
-        else if (data.type === CardData) {
-
-            // Card changes should continue the game, by passing into the controller
-            const cardChanges = received as CardChanges;
-            const card = new JankenCard(cardChanges.element, cardChanges.power, cardChanges.color, cardChanges.rps);
-            this.controller.proceed(card);
-        }
-    }
 }

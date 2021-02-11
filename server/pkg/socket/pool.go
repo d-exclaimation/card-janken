@@ -15,20 +15,22 @@ import (
 )
 
 type Pool struct {
-	Register chan *Client
-	Unregister chan *Client
-	Clients map[*Client] bool
-	Broadcast chan *JankenChanges
-	Store []*JankenChanges
+	Register 	chan *Client
+	Unregister 	chan *Client
+	Clients 	map[*Client] bool
+	Broadcast 	chan *JankenChanges
+	Store 		[]*JankenChanges
+	Rooms       map[*Pool]bool
 }
 
-func NewPool() *Pool {
+func NewPool(parent map[*Pool]bool) *Pool {
 	return &Pool{
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 		Clients:    make(map[*Client] bool),
 		Broadcast:  make(chan *JankenChanges),
 		Store:		make([]*JankenChanges, 0),
+		Rooms:	 	parent,
 	}
 }
 
@@ -38,13 +40,17 @@ func (pool *Pool) Start() {
 			case client := <-pool.Register:
 				// Add to clients, and show size
 				pool.Clients[client] = true
+				if len(pool.Clients) == 2 {
+					pool.Rooms[pool] = true
+					log.Println("Full") // full
+				}
 				pool.Notify("User connected")
 				break
 			case client := <-pool.Unregister:
-				// Delete from clients and show the current size
-				delete(pool.Clients, client)
+				// Delete all clients and delete self
+				pool.DisconnectAll(client)
 				pool.Notify("User disconnected")
-				break
+				return
 			case changes := <-pool.Broadcast:
 				pool.Store = append(pool.Store, changes)
 				if len(pool.Store) < 2 {
@@ -56,6 +62,7 @@ func (pool *Pool) Start() {
 }
 
 func (pool *Pool) SendChanges() {
+	// Loop through each changes, emit JSON
 	for _, changes := range pool.Store {
 		var res = NewSocketCard(changes.Card)
 		pool.EmitTo(res, func(client *Client) bool {
@@ -63,6 +70,7 @@ func (pool *Pool) SendChanges() {
 		})
 	}
 
+	// Empty the store
 	pool.Store = make([]*JankenChanges, 0)
 }
 
@@ -76,10 +84,11 @@ func (pool *Pool) Notify(message string) {
 
 func (pool *Pool) EmitTo(obj interface{}, filter func(client *Client) bool) {
 	for client, _ := range pool.Clients {
+
+		// Filter through given the filter function
 		if !filter(client) {
 			continue
 		}
-
 		if err := client.Conn.WriteJSON(obj); err != nil {
 			log.Println(err)
 		}
@@ -89,6 +98,8 @@ func (pool *Pool) EmitTo(obj interface{}, filter func(client *Client) bool) {
 func (pool *Pool) EmitAll(obj interface{}, handleErr func(err error)) {
 	for client, _ := range pool.Clients {
 		if err := client.Conn.WriteJSON(obj); err != nil {
+
+			// Emit JSON, do err handling with given handler
 			if handleErr == nil {
 				log.Println(err)
 				return
@@ -96,4 +107,17 @@ func (pool *Pool) EmitAll(obj interface{}, handleErr func(err error)) {
 			handleErr(err)
 		}
 	}
+}
+
+func (pool *Pool) DisconnectAll(disconnector *Client) {
+	delete(pool.Clients, disconnector)
+	for client, _ := range pool.Clients {
+
+		// Close connection for all clients, and remove them
+		_ = client.Conn.Close()
+		delete(pool.Clients, client)
+	}
+
+	// Delete self from rooms and let garbage collector remove self
+	delete(pool.Rooms, pool)
 }
