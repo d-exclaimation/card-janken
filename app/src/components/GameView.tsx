@@ -20,17 +20,20 @@ import {Button, useDisclosure} from '@chakra-ui/react';
 import Board from './Board';
 import WinAlert from './WinAlert';
 import Bank from './Bank';
+import {useWindowSize} from '../libs/WindowConfig';
 
 const winSoundURL = drivePlayURL('https://drive.google.com/file/d/1m4XqTiat8kgSKzAMcdOGnjmd6QMxiT9b/view?usp=sharing');
 const loseSoundURL = drivePlayURL('https://drive.google.com/file/d/1FwYBpWCa3KoI6p0gkJHRrtwS-1pB6BEt/view?usp=sharing');
 
 interface Props {
-    context: React.Context<JankenStore> | null
+    context: React.Context<JankenStore> | null,
+    quit: () => void,
 }
 
-const Game: React.FC<Props> = observer(({ context }: Props) => {
+const Game: React.FC<Props> = observer(({ context, quit }: Props) => {
     const jankenStore = useContext(context === null ? JankenStoreContext : context);
     const [toogleWin, toogleLost] = [useAudio(winSoundURL), useAudio(loseSoundURL)];
+    const window = useWindowSize();
 
     // On View State
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -75,6 +78,7 @@ const Game: React.FC<Props> = observer(({ context }: Props) => {
                         isShown={gameOver}
                         isWon={jankenStore.gameState === GameState.won}
                         onClose={() => setGameOver(false)}
+                        onCancel={quit}
                         onConfirm={() => {
                             jankenStore.restart();
                             onClose();
@@ -88,6 +92,11 @@ const Game: React.FC<Props> = observer(({ context }: Props) => {
                     />
                     <Button colorScheme={isOpen ? 'red': 'green'} onClick={onOpen}>
                         Bank
+                    </Button>
+                    <Button
+                        pos="absolute" top={window.height * 0.01} left={window.width * 0.01}
+                        colorScheme="red" onClick={() => quit()}>
+                        Exit
                     </Button>
                 </>
             </header>

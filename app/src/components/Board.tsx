@@ -31,23 +31,36 @@ interface Props {
 const Board: React.FC<Props> = ({ myHand, table, wonRound, choose }: Props ) => {
     const toggleFlip = useAudio(cardFlipURL);
     const size = useWindowSize();
+    const [boardWidth, boardHeight] = [size.width * 0.6, size.height * 0.8];
+    const [cardWidth, cardHeight] = ((): [number, number] => {
+        const spaces = Math.round(size.width / 130);
+        // boardHeight = cardHeight * 3 + 5 spaces + 30;
+        // cardHeight = (boardHeight - 5 spaces - 30) / 3;
+
+        // boardWidth = cardWidth * 5 + 8 spaces;
+        // cardWidth = (boardWidth - (8 * spaces)) / 5;
+        console.log(size);
+        return [Math.min(40, (boardWidth - (8 * spaces)) / 20), Math.min(60, (boardHeight - (5 * spaces) - 30) / 12)];
+    })();
 
     return (
         <Box m={5} p={10} bg="#fafafa" borderRadius="lg">
-            <VStack width={size.width * 0.6} height={size.height * 0.8}>
+            <VStack width={boardWidth} height={boardHeight}>
                 <HStack>
                     <Center>
                         { myHand.map((card, index) => {
                             return (
                                 <Box key={index} m={5}>
-                                    <Card isFaceUp={false} power={card.power} color={card.color} element={card.element} />
+                                    <Card
+                                        size={{width: cardWidth, height: cardHeight}}
+                                        isFaceUp={false} power={card.power} color={card.color} element={card.element} />
                                 </Box>
                             );
                         }) }
                     </Center>
                 </HStack>
                 <Spacer />
-                <TableCard cards={table} isWon={wonRound} radius={10} pads={10}/>
+                <TableCard window={size} cards={table} isWon={wonRound} radius={10} pads={10}/>
                 <Spacer />
                 <HStack>
                     <Center>
@@ -57,7 +70,9 @@ const Board: React.FC<Props> = ({ myHand, table, wonRound, choose }: Props ) => 
                                     toggleFlip();
                                     choose(index);
                                 }}>
-                                    <Card isFaceUp={card.isFaceUp} power={card.power} color={card.color} element={card.element} />
+                                    <Card
+                                        size={{width: cardWidth, height: cardHeight}}
+                                        isFaceUp={card.isFaceUp} power={card.power} color={card.color} element={card.element} />
                                 </Box>
                             );
                         }) }

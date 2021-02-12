@@ -21,11 +21,12 @@ interface Props {
     isShown: boolean,
     isWon: boolean,
     onClose: () => void,
+    onCancel: () => void,
     onConfirm: () => void,
 }
 
 
-const WinAlert: React.FC<Props> = ({isWon, isShown, onClose, onConfirm}: Props) => {
+const WinAlert: React.FC<Props> = ({isWon, isShown, onClose, onCancel, onConfirm}: Props) => {
     const cancelRef = React.useRef(null);
 
     return (
@@ -36,7 +37,7 @@ const WinAlert: React.FC<Props> = ({isWon, isShown, onClose, onConfirm}: Props) 
         >
             <AlertDialogOverlay>
                 <AlertDialogContent>
-                    <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                    <AlertDialogHeader fontSize="xl" fontWeight="bold">
                         { isWon ? 'You won' : 'You lost' }
                     </AlertDialogHeader>
 
@@ -45,7 +46,10 @@ const WinAlert: React.FC<Props> = ({isWon, isShown, onClose, onConfirm}: Props) 
                     </AlertDialogBody>
 
                     <AlertDialogFooter>
-                        <Button onClick={onClose} ref={cancelRef}>
+                        <Button onClick={() => {
+                            onClose();
+                            onCancel();
+                        }} ref={cancelRef}>
                             Cancel
                         </Button>
                         <Button colorScheme="red" onClick={() => {

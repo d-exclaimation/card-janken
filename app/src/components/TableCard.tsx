@@ -13,10 +13,11 @@ import { useWindowSize } from '../libs/WindowConfig';
 import Card from './Card';
 
 interface Props {
-    cards: [CardProps, CardProps]
-    isWon: boolean
-    radius: number
-    pads: number
+    cards: [CardProps, CardProps],
+    isWon: boolean,
+    radius: number,
+    pads: number,
+    window: Size,
 }
 
 export interface CardProps {
@@ -26,19 +27,32 @@ export interface CardProps {
     isFaceUp: boolean,
 }
 
+interface Size {
+    width: number,
+    height: number
+}
 
-const TableCard: React.FC<Props> = ({cards, isWon, radius, pads}: Props) => {
-    const window = useWindowSize();
+
+const TableCard: React.FC<Props> = ({cards, isWon, radius, pads, window}: Props) => {
+    const [boardWidth, boardHeight] = [window.width * 0.6, window.height * 0.8];
+    const [cardWidth, cardHeight] = ((): [number, number] => {
+        const spaces = 10;
+        return [Math.min(40, (boardWidth - (8 * spaces)) / 20), Math.min(60, (boardHeight - (5 * spaces) - 30) / 12)];
+    })();
+    const iconSize = Math.round(cardWidth * 0.4);
+
     const tableIndicator = (): JSX.Element => {
         return ( isWon ?
-            <CheckCircleIcon w={16} h={16} color="green.500" opacity={1} /> :
-            <WarningIcon w={16} h={16} color="red.500" opacity={1} />
+            <CheckCircleIcon w={iconSize} h={iconSize} color="green.500" opacity={1} /> :
+            <WarningIcon w={iconSize} h={iconSize} color="red.500" opacity={1} />
         );
     };
 
     const tableCard = (num: number): JSX.Element => {
         return (
-            <Card isFaceUp={cards[num].isFaceUp} power={cards[num].power} color={cards[num].color} element={cards[num].element} />
+            <Card
+                size={{width: cardWidth, height: cardHeight}}
+                isFaceUp={cards[num].isFaceUp} power={cards[num].power} color={cards[num].color} element={cards[num].element} />
         );
     };
 

@@ -19,6 +19,7 @@ import {
     SimpleGrid
 } from '@chakra-ui/react';
 import Card from './Card';
+import {useWindowSize} from '../libs/WindowConfig';
 
 interface Props {
     isOpen: boolean,
@@ -27,6 +28,9 @@ interface Props {
 }
 
 const Bank: React.FC<Props> = ({isOpen, onClose, loot}: Props) => {
+    const window = useWindowSize();
+    const spaces = Math.round(window.width / 130);
+    const [cW, cH] = [Math.min(40, ((window.width * 0.6) - (8 * spaces)) / 20), Math.min(60, ((window.height * 0.8) - (5 * spaces) - 30) / 12)];
     return (
         <Drawer
             isOpen={isOpen}
@@ -39,11 +43,12 @@ const Bank: React.FC<Props> = ({isOpen, onClose, loot}: Props) => {
                     <DrawerCloseButton />
                     <DrawerHeader>Card Bank</DrawerHeader>
                     <DrawerBody>
-                        <SimpleGrid columns={7} spacing={10}>
+                        <SimpleGrid columns={7} spacing={spaces}>
                             { loot
                                 .map((card, index) => {
                                     return (
                                         <Card
+                                            size={{width: cW, height: cH}}
                                             key={index}
                                             isFaceUp={card.isFaceUp}
                                             power={card.power}

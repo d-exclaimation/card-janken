@@ -29,8 +29,13 @@ const App: React.FC = () => {
         setIn(state);
     };
 
+    const quitGame = () => {
+        storeContext = null;
+        setIn(false);
+    };
+
     return (
-        <Box> { isIn ? <Game context={storeContext} /> : <MainMenu multi={multi} setIn={enterGame} setMulti={setMulti}/> } </Box>
+        <Box> { isIn ? <Game context={storeContext} quit={quitGame} /> : <MainMenu multi={multi} setIn={enterGame} setMulti={setMulti}/> } </Box>
     );
 };
 
