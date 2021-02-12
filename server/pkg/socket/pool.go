@@ -40,11 +40,13 @@ func (pool *Pool) Start() {
 			case client := <-pool.Register:
 				// Add to clients, and show size
 				pool.Clients[client] = true
+
+				// Notify when room is full
 				if len(pool.Clients) == 2 {
 					pool.Rooms[pool] = true
 					log.Println("Full") // full
+					pool.Notify("User connected")
 				}
-				pool.Notify("User connected")
 				break
 			case client := <-pool.Unregister:
 				// Delete all clients and delete self
@@ -83,7 +85,7 @@ func (pool *Pool) Notify(message string) {
 }
 
 func (pool *Pool) EmitTo(obj interface{}, filter func(client *Client) bool) {
-	for client, _ := range pool.Clients {
+	for client := range pool.Clients {
 
 		// Filter through given the filter function
 		if !filter(client) {
@@ -96,7 +98,7 @@ func (pool *Pool) EmitTo(obj interface{}, filter func(client *Client) bool) {
 }
 
 func (pool *Pool) EmitAll(obj interface{}, handleErr func(err error)) {
-	for client, _ := range pool.Clients {
+	for client := range pool.Clients {
 		if err := client.Conn.WriteJSON(obj); err != nil {
 
 			// Emit JSON, do err handling with given handler
@@ -111,7 +113,7 @@ func (pool *Pool) EmitAll(obj interface{}, handleErr func(err error)) {
 
 func (pool *Pool) DisconnectAll(disconnector *Client) {
 	delete(pool.Clients, disconnector)
-	for client, _ := range pool.Clients {
+	for client := range pool.Clients {
 
 		// Close connection for all clients, and remove them
 		_ = client.Conn.Close()
