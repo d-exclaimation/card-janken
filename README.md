@@ -3,7 +3,7 @@ Cardjitsu for Web and also Multiplayer...lol
 
 I make a simple Card Jitsu Game Clone for Web but this time, it's multiplayer
 
-Get randomly matched with an opponent using a complex algorithms called not doing anything to match anyone and just match but timing.
+Get randomly matched with an opponent using a complex algorithm called not doing anything to match anyone and just match by timing.
 
 This is the [`iOS version`](https://github.com/d-exclaimation/CardJitsuClone) that is more polished on the client-side but not multiplayer 
 
